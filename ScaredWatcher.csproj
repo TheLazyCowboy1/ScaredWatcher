@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>11</LangVersion>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<Reference Include="..\REFERENCES\*.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Scared Watcher\plugins\" />
+	</ItemGroup>
+
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<ItemGroup>
+			<BuildFiles Include="$(Outdir)\ScaredWatcher.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(BuildFiles)" DestinationFolder="Scared Watcher\plugins" />
+		<ItemGroup>
+			<OutputFolder Include="Scared Watcher\*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(OutputFolder)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\Scared Watcher" />
+		<Copy SourceFiles="@(BuildFiles)" DestinationFolder="C:\Program Files (x86)\Steam\steamapps\common\Rain World\RainWorld_Data\StreamingAssets\mods\Scared Watcher\plugins" />
+	</Target>
+
+</Project>
