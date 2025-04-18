@@ -20,7 +20,7 @@ public partial class Plugin : BaseUnityPlugin
 {
     public const string MOD_ID = "LazyCowboy.ScaredWatcher",
         MOD_NAME = "Traumatized Watcher Behavior",
-        MOD_VERSION = "0.0.4";
+        MOD_VERSION = "0.0.5";
 
 
     private static ConfigOptions Options;
@@ -175,6 +175,12 @@ public partial class Plugin : BaseUnityPlugin
                         intensity += critFright;
                         rightBias += 2 * critFright * (cr.mainBodyChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
                     }
+                    //iterators
+                    else if (obj is Oracle oracle)
+                    {
+                        intensity += 2f;
+                        rightBias += 2f * (oracle.firstChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
+                    }
                 }
 
                 //weird effect threat
@@ -227,6 +233,14 @@ public partial class Plugin : BaseUnityPlugin
                 }
             }
 
+
+            //slugpup AI stats
+            if (self.isNPC)
+            {
+                var per = self.abstractCreature.personality;
+                intensity *= 1 + 0.5f * (per.nervous - 0.5f*per.bravery);
+                rightBias *= 1 + 0.5f * (per.nervous - per.bravery);
+            }
 
             //finally get to the actual movement stuff
             noise.Tick(intensity, rightBias);
@@ -316,6 +330,10 @@ public partial class Plugin : BaseUnityPlugin
         //echoes
         var ghostRoom = abRoom.world.worldGhost?.ghostRoom;
         if (abRoom == ghostRoom) intensity += Options.GhostFright.Value;
+
+        //iterators
+        if (abRoom.name.EndsWith("_AI"))
+            intensity += 2f;
 
         //rot + creatures
         if (fullTest)
