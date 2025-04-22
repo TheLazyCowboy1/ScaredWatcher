@@ -20,7 +20,7 @@ public partial class Plugin : BaseUnityPlugin
 {
     public const string MOD_ID = "LazyCowboy.ScaredWatcher",
         MOD_NAME = "Traumatized Watcher Behavior",
-        MOD_VERSION = "0.0.5";
+        MOD_VERSION = "0.0.7";
 
 
     private static ConfigOptions Options;
@@ -178,8 +178,8 @@ public partial class Plugin : BaseUnityPlugin
                     //iterators
                     else if (obj is Oracle oracle)
                     {
-                        intensity += 2f;
-                        rightBias += 2f * (oracle.firstChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
+                        intensity += 2f * Options.WeirdnessFright.Value;
+                        rightBias += 2f * Options.WeirdnessFright.Value * (oracle.firstChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
                     }
                 }
 
@@ -254,28 +254,46 @@ public partial class Plugin : BaseUnityPlugin
 
             moveDir *= 1.1f - self.aerobicLevel * 0.2f; //slightly less movement if adrenaline is high
 
+            //Only Cancel Inputs
+            if (Options.OnlyWhileMoving.Value && self.input[0].x == 0)
+                canForceMovement = false;
+
             float rand = UnityEngine.Random.value;
             if (canForceMovement)
             {
                 if (moveDir >= 1) //move right
                 {
-                    bool canMove = false;
-                    for (int i = 0; i > -5; i--) //check to ensure I'm not running into the abyss
+                    if (Options.NoReversing.Value && self.input[0].x == -1)
                     {
-                        if (self.IsTileSolid(0, 1, i)) { canMove = true; break; }
+                        self.input[0].x = 0; //no reversing! Just cancel movement
                     }
-                    if (canMove)
-                        self.input[0].x = 1; //override input with moveDir
+                    else
+                    {
+                        bool canMove = false;
+                        for (int i = 0; i > -5; i--) //check to ensure I'm not running into the abyss
+                        {
+                            if (self.IsTileSolid(0, 1, i)) { canMove = true; break; }
+                        }
+                        if (canMove)
+                            self.input[0].x = 1; //override input with moveDir
+                    }
                 }
                 else if (moveDir <= -1) //move left
                 {
-                    bool canMove = false;
-                    for (int i = 0; i > -5; i--)
+                    if (Options.NoReversing.Value && self.input[0].x == 1)
                     {
-                        if (self.IsTileSolid(0, -1, i)) { canMove = true; break; }
+                        self.input[0].x = 0; //no reversing! Just cancel movement
                     }
-                    if (canMove)
-                        self.input[0].x = -1;
+                    else
+                    {
+                        bool canMove = false;
+                        for (int i = 0; i > -5; i--)
+                        {
+                            if (self.IsTileSolid(0, -1, i)) { canMove = true; break; }
+                        }
+                        if (canMove)
+                            self.input[0].x = -1;
+                    }
                 }
 
                 if (Mathf.Abs(moveDir) >= 1.3f && rand < 0.01f)
@@ -333,7 +351,7 @@ public partial class Plugin : BaseUnityPlugin
 
         //iterators
         if (abRoom.name.EndsWith("_AI"))
-            intensity += 2f;
+            intensity += 2f * Options.WeirdnessFright.Value;
 
         //rot + creatures
         if (fullTest)

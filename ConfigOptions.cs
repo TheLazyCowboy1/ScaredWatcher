@@ -19,6 +19,8 @@ public class ConfigOptions : OptionInterface
         CreatureFright = this.config.Bind<float>("CreatureFright", 0.3f, new ConfigAcceptableRange<float>(0f, 10f));
         SoundFright = this.config.Bind<float>("SoundFright", 0.7f, new ConfigAcceptableRange<float>(0f, 10f));
         MaxIntensity = this.config.Bind<float>("MaxIntensity", 1.5f, new ConfigAcceptableRange<float>(0f, 10f));
+        OnlyWhileMoving = this.config.Bind<bool>("OnlyWhileMoving", false);
+        NoReversing = this.config.Bind<bool>("NoReversing", false);
 
         AllSlugcats = this.config.Bind<bool>("AllSlugcats", false);
     }
@@ -30,10 +32,15 @@ public class ConfigOptions : OptionInterface
     public readonly Configurable<float> CreatureFright;
     public readonly Configurable<float> SoundFright;
     public readonly Configurable<float> MaxIntensity;
+    public readonly Configurable<bool> OnlyWhileMoving;
+    public readonly Configurable<bool> NoReversing;
 
     //Slugcats
     public readonly Configurable<bool> AllSlugcats;
     public readonly Dictionary<string, Configurable<bool>> SlugcatsEnabled = new();
+
+    //private OpCheckBox OnlyCancelCheckbox;
+    //private OpCheckBox NoReversingCheckbox;
 
     public override void Initialize()
     {
@@ -45,7 +52,10 @@ public class ConfigOptions : OptionInterface
             slugcatsTab
         };
 
-        float t = 150f, y = 450f, h = -50f, x = 50f, w = 80f;
+        float t = 150f, y = 500f, h = -50f, x = 50f, w = 80f;
+
+        //OnlyCancelCheckbox = new OpCheckBox(OnlyCancelInputs, x, y) { description = "ONLY allows random inputs while you are moving. This allows Watcher to stay still easily; only panicking while moving." };
+        //NoReversingCheckbox = new OpCheckBox(NoReversing, x, y) { description = "Prevents random inputs from reversing your direction while you're already moving. Instead of reversing direction, they will force a lack of movement." };
 
         //General Options
         intensitiesTab.AddItems(
@@ -60,7 +70,12 @@ public class ConfigOptions : OptionInterface
             new OpLabel(t, y+=h, "Sudden Sound Fright"),
             new OpUpdown(SoundFright, new(x, y), w, 2),
             new OpLabel(t, y+=h, "MAXIMUM Effect Intensity"),
-            new OpUpdown(MaxIntensity, new(x, y), w, 2) { description = "Set to 0.9 or below to entirely prevent it from giving random inputs.\nBasic guide: 1.5 = up to 1/3 inputs random (at max intensity), 2.0 = up to 1/2, 3.0 = up to 2/3, 4.0 = up to 3/4, etc." }
+            new OpUpdown(MaxIntensity, new(x, y), w, 2) { description = "Set to 0.9 or below to entirely prevent it from giving random inputs.\nBasic guide: 1.5 = up to 1/3 inputs random (at max intensity), 2.0 = up to 1/2, 3.0 = up to 2/3, 4.0 = up to 3/4, etc." },
+            
+            new OpLabel(t, y += h, "Only While Moving"),
+            new OpCheckBox(OnlyWhileMoving, x, y) { description = "ONLY allows random inputs while you are moving. This allows Watcher to stay still easily; only panicking while moving." },
+            new OpLabel(t, y += h, "Don't Reverse Direction"),
+            new OpCheckBox(NoReversing, x, y) { description = "Prevents random inputs from reversing your direction while you're already moving. Instead of reversing direction, they will force a lack of movement." }
             );
 
         SetupSlugcatConfigs();
@@ -83,6 +98,15 @@ public class ConfigOptions : OptionInterface
         }
     }
 
+    /*public override void Update()
+    {
+        if (OnlyCancelCheckbox != null && OnlyCancelCheckbox.GetValueBool())
+        {
+            NoReversingCheckbox.greyedOut = true;
+            NoReversingCheckbox.SetValueBool(true);
+        }
+    }*/
+
     public void SetupSlugcatConfigs()
     {
         foreach (var scug in SlugcatStats.Name.values.entries)
@@ -97,6 +121,7 @@ public class ConfigOptions : OptionInterface
 
     private bool ScugDefaultEnabled(string scug)
     {
-        return scug == WatcherEnums.SlugcatStatsName.Watcher.value || scug == MoreSlugcatsEnums.SlugcatStatsName.Slugpup.value;
+        return ModManager.Watcher && scug == WatcherEnums.SlugcatStatsName.Watcher.value
+            || ModManager.MSC && scug == MoreSlugcatsEnums.SlugcatStatsName.Slugpup.value;
     }
 }
