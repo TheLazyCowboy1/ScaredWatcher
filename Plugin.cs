@@ -20,7 +20,7 @@ public partial class Plugin : BaseUnityPlugin
 {
     public const string MOD_ID = "LazyCowboy.ScaredWatcher",
         MOD_NAME = "Traumatized Watcher Behavior",
-        MOD_VERSION = "0.0.7";
+        MOD_VERSION = "0.0.8";
 
 
     private static ConfigOptions Options;
@@ -206,6 +206,14 @@ public partial class Plugin : BaseUnityPlugin
 
             //easy rot effect
             if (self.room.rotPresenceInitialized) intensity += 0.5f * Options.RotFright.Value;
+
+            if (ModManager.Watcher)
+            {
+                intensity += self.room.roomSettings.GetEffectAmount(WatcherEnums.RoomEffectType.SentientRotParticles)
+                    * 0.5f * (Options.WeirdnessFright.Value + Options.RotFright.Value); //avg. of weird and rot
+                intensity += self.room.roomSettings.GetEffectAmount(WatcherEnums.RoomEffectType.SentientRotInfection)
+                    * Options.RotFright.Value;
+            }
 
             //easy weirdness effects
             if (self.room.fsRipple != null) intensity += Options.WeirdnessFright.Value;
