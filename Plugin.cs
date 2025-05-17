@@ -20,7 +20,7 @@ public partial class Plugin : BaseUnityPlugin
 {
     public const string MOD_ID = "LazyCowboy.ScaredWatcher",
         MOD_NAME = "Traumatized Watcher Behavior",
-        MOD_VERSION = "0.0.8";
+        MOD_VERSION = "0.0.9";
 
 
     private static ConfigOptions Options;
@@ -228,16 +228,19 @@ public partial class Plugin : BaseUnityPlugin
 
 
             //check other rooms
-            foreach (var exit in self.room.exitAndDenIndex)
+            if (self.room.exitAndDenIndex != null)
             {
-                var abRoom = self.room.WhichRoomDoesThisExitLeadTo(exit);
-                if (abRoom != null)
+                foreach (var exit in self.room.exitAndDenIndex)
                 {
-                    Vector2 realPos = (exit * 20).ToVector2();
-                    float roomInt = 2 * IntensityOfRoom(abRoom, fullCheck) * Mathf.Max(0, 1 - ((realPos-self.mainBodyChunk.pos) * 0.005f).sqrMagnitude); //10 tile range (1 / 20 / 10 == 0.005)
+                    var abRoom = self.room.WhichRoomDoesThisExitLeadTo(exit);
+                    if (abRoom != null)
+                    {
+                        Vector2 realPos = (exit * 20).ToVector2();
+                        float roomInt = 2 * IntensityOfRoom(abRoom, fullCheck) * Mathf.Max(0, 1 - ((realPos - self.mainBodyChunk.pos) * 0.005f).sqrMagnitude); //10 tile range (1 / 20 / 10 == 0.005)
 
-                    intensity += roomInt;
-                    rightBias += roomInt * (self.mainBodyChunk.pos.x <= realPos.x ? -1 : 1);
+                        intensity += roomInt;
+                        rightBias += roomInt * (self.mainBodyChunk.pos.x <= realPos.x ? -1 : 1);
+                    }
                 }
             }
 
