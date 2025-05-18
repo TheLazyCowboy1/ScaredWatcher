@@ -181,6 +181,12 @@ public partial class Plugin : BaseUnityPlugin
                         intensity += 2f * Options.WeirdnessFright.Value;
                         rightBias += 2f * Options.WeirdnessFright.Value * (oracle.firstChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
                     }
+                    //Prince
+                    else if (obj is Prince prince)
+                    {
+                        intensity += 2f * (Options.WeirdnessFright.Value + Options.RotFright.Value);
+                        rightBias += 2f * (Options.WeirdnessFright.Value + Options.RotFright.Value) * (prince.firstChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
+                    }
                 }
 
                 //weird effect threat
@@ -201,6 +207,15 @@ public partial class Plugin : BaseUnityPlugin
                     float warpInt = Mathf.Max(0, -((self.mainBodyChunk.pos - warp.pos).sqrMagnitude - sqrScale) / sqrScale) * Options.WeirdnessFright.Value;
                     intensity += warpInt;
                     rightBias += warpInt * (warp.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
+                }
+
+
+                //void spawn
+                foreach (var spawn in self.room.voidSpawns)
+                {
+                    float spawnInt = Mathf.Max(0.02f, 0.1f * spawn.sizeFac - 0.000025f * (self.mainBodyChunk.pos - spawn.firstChunk.pos).sqrMagnitude); //capped out at 10 tiles
+                    intensity += spawnInt;
+                    rightBias += spawnInt * (spawn.firstChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
                 }
             }
 
@@ -224,7 +239,7 @@ public partial class Plugin : BaseUnityPlugin
 
             if (self.room.ripple) intensity += Options.WeirdnessFright.Value;
 
-            intensity += self.room.voidSpawns.Count * 0.05f * Options.WeirdnessFright.Value;
+            //intensity += self.room.voidSpawns.Count * 0.05f * Options.WeirdnessFright.Value;
 
 
             //check other rooms
@@ -362,7 +377,20 @@ public partial class Plugin : BaseUnityPlugin
 
         //iterators
         if (abRoom.name.EndsWith("_AI"))
-            intensity += 2f * Options.WeirdnessFright.Value;
+        {
+            switch (abRoom.name)
+            {
+                case "SL_AI":
+                    intensity += Options.WeirdnessFright.Value;
+                    break;
+                case "WORA_AI":
+                    intensity += 2f * (Options.WeirdnessFright.Value + Options.RotFright.Value);
+                    break;
+                default:
+                    intensity += 2f * Options.WeirdnessFright.Value; //half intensity for Shoreline Moon
+                    break;
+            }
+        }
 
         //rot + creatures
         if (fullTest)
