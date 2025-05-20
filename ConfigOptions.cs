@@ -19,6 +19,7 @@ public class ConfigOptions : OptionInterface
         CreatureFright = this.config.Bind<float>("CreatureFright", 0.3f, new ConfigAcceptableRange<float>(0f, 10f));
         SoundFright = this.config.Bind<float>("SoundFright", 0.7f, new ConfigAcceptableRange<float>(0f, 10f));
         MaxIntensity = this.config.Bind<float>("MaxIntensity", 1.5f, new ConfigAcceptableRange<float>(0f, 10f));
+        RecoverySpeed = this.config.Bind<float>("RecoverySpeed", 1f, new ConfigAcceptableRange<float>(0f, 10f));
         OnlyWhileMoving = this.config.Bind<bool>("OnlyWhileMoving", false);
         NoReversing = this.config.Bind<bool>("NoReversing", false);
 
@@ -32,6 +33,7 @@ public class ConfigOptions : OptionInterface
     public readonly Configurable<float> CreatureFright;
     public readonly Configurable<float> SoundFright;
     public readonly Configurable<float> MaxIntensity;
+    public readonly Configurable<float> RecoverySpeed;
     public readonly Configurable<bool> OnlyWhileMoving;
     public readonly Configurable<bool> NoReversing;
 
@@ -71,7 +73,9 @@ public class ConfigOptions : OptionInterface
             new OpUpdown(SoundFright, new(x, y), w, 2),
             new OpLabel(t, y+=h, "MAXIMUM Effect Intensity"),
             new OpUpdown(MaxIntensity, new(x, y), w, 2) { description = "Set to 0.9 or below to entirely prevent it from giving random inputs.\nBasic guide: 1.5 = up to 1/3 inputs random (at max intensity), 2.0 = up to 1/2, 3.0 = up to 2/3, 4.0 = up to 3/4, etc." },
-            
+            new OpLabel(t, y += h, "Recovery Speed"),
+            new OpUpdown(RecoverySpeed, new(x, y), w, 2) { description = "Scales how quickly the Watcher becomes accustomed to and recovers from frights." },
+
             new OpLabel(t, y += h, "Only While Moving"),
             new OpCheckBox(OnlyWhileMoving, x, y) { description = "ONLY allows random inputs while you are moving. This allows Watcher to stay still easily; only panicking while moving." },
             new OpLabel(t, y += h, "Don't Reverse Direction"),

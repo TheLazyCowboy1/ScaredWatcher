@@ -146,6 +146,7 @@ public partial class Plugin : BaseUnityPlugin
                 && self.canJump > 0 //don't move mid-air
                 && !(self.input[0].x == 0 && self.input[0].y != 0) //don't move while holding straight down or straight up
                 && !self.input[0].thrw //don't alter throw trajectories
+                && !(self.input[0].pckp && self.input[0].x == 0) //don't move while eating/swallowing
                 && self.bodyMode != Player.BodyModeIndex.WallClimb; //don't ruin wall slides/jumps
                 //&& !self.input[0].jmp; //this is a HUGE protection, but it allows players to easily circumvent the effect if they want
 
@@ -213,7 +214,7 @@ public partial class Plugin : BaseUnityPlugin
                 //void spawn
                 foreach (var spawn in self.room.voidSpawns)
                 {
-                    float spawnInt = Mathf.Max(0.02f, 0.1f * spawn.sizeFac - 0.000025f * (self.mainBodyChunk.pos - spawn.firstChunk.pos).sqrMagnitude); //capped out at 10 tiles
+                    float spawnInt = Mathf.Max(0.1f, 0.5f * spawn.sizeFac - 0.000025f * (self.mainBodyChunk.pos - spawn.firstChunk.pos).sqrMagnitude); //capped out at 10 tiles
                     intensity += spawnInt;
                     rightBias += spawnInt * (spawn.firstChunk.pos.x < self.mainBodyChunk.pos.x ? 1 : -1);
                 }
@@ -266,6 +267,13 @@ public partial class Plugin : BaseUnityPlugin
                 var per = self.abstractCreature.personality;
                 intensity *= 1 + 0.5f * (per.nervous - 0.5f*per.bravery);
                 rightBias *= 1 + 0.5f * (per.nervous - per.bravery);
+
+                //Slugpups are less scared if held by a player
+                if (self.grabbedBy.Any(c => c.grabber is Player))
+                {
+                    intensity *= 0.5f;
+                    rightBias *= 0.5f;
+                }
             }
 
             //finally get to the actual movement stuff
@@ -367,7 +375,7 @@ public partial class Plugin : BaseUnityPlugin
         }
     }
 
-    private float IntensityOfRoom(AbstractRoom abRoom, bool fullTest)
+    public float IntensityOfRoom(AbstractRoom abRoom, bool fullTest)
     {
         float intensity = 0f;
 
@@ -380,14 +388,14 @@ public partial class Plugin : BaseUnityPlugin
         {
             switch (abRoom.name)
             {
-                case "SL_AI":
+                case "SL_AI": //half intensity for Shoreline Moon
                     intensity += Options.WeirdnessFright.Value;
                     break;
                 case "WORA_AI":
                     intensity += 2f * (Options.WeirdnessFright.Value + Options.RotFright.Value);
                     break;
                 default:
-                    intensity += 2f * Options.WeirdnessFright.Value; //half intensity for Shoreline Moon
+                    intensity += 2f * Options.WeirdnessFright.Value;
                     break;
             }
         }
@@ -468,8 +476,10 @@ public partial class Plugin : BaseUnityPlugin
             queuedIntensity = 0; queuedBias = 0;
             intensity *= OVERALL_MODIFIER; bias *= OVERALL_MODIFIER;
 
-            accustomedIntensity += (intensity - accustomedIntensity) * 0.003f; //move .3% towards new intensity
-            accustomedIntensity *= 0.999f; //always decreasing; never truly gets used to frights
+            //accustomedIntensity += (intensity - accustomedIntensity) * 0.003f; //move .3% towards new intensity
+            //accustomedIntensity *= 0.999f; //always decreasing; never truly gets used to frights
+            accustomedIntensity += (intensity - accustomedIntensity) * Mathf.Abs(intensity - accustomedIntensity) * 0.001f * Options.RecoverySpeed.Value;
+            accustomedIntensity *= 0.99995f; //always decreasing; never truly gets used to frights
 
             immediateFright = intensity - accustomedIntensity;
             if (immediateFright > fright) fright = Mathf.Min(fright + (immediateFright - fright) * 1.2f, Options.MaxIntensity.Value); //* 1.2f = jumpscare effect
