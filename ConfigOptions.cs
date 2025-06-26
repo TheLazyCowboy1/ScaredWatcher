@@ -1,10 +1,7 @@
-using BepInEx.Logging;
-using Menu.Remix;
 using Menu.Remix.MixedUI;
-using Menu.Remix.MixedUI.ValueTypes;
 using MoreSlugcats;
+using System;
 using System.Collections.Generic;
-using UnityEngine;
 using Watcher;
 
 namespace ScaredWatcher;
@@ -115,11 +112,14 @@ public class ConfigOptions : OptionInterface
     {
         foreach (var scug in SlugcatStats.Name.values.entries)
         {
-            if (!SlugcatsEnabled.ContainsKey(scug) && !scug.StartsWith("JollyPlayer"))
+            try
             {
-                var config = this.config.Bind<bool>(scug + "_enabled", ScugDefaultEnabled(scug));
-                SlugcatsEnabled.Add(scug, config);
-            }
+                if (!SlugcatsEnabled.ContainsKey(scug) && !scug.StartsWith("JollyPlayer"))
+                {
+                    var config = this.config.Bind<bool>(SafeStringChars(scug) + "_enabled", ScugDefaultEnabled(scug));
+                    SlugcatsEnabled.Add(scug, config);
+                }
+            } catch (Exception ex) { Plugin.PublicLogger.LogError(ex); }
         }
     }
 
@@ -127,5 +127,17 @@ public class ConfigOptions : OptionInterface
     {
         return ModManager.Watcher && scug == WatcherEnums.SlugcatStatsName.Watcher.value
             || ModManager.MSC && scug == MoreSlugcatsEnums.SlugcatStatsName.Slugpup.value;
+    }
+
+    //To fix stupid slugcat mods like The Nightstriker that used the ID "The Nightmare". Whyyy are there spaces in your ID...
+    private static string SafeStringChars(string s)
+    {
+        char[] a = s.ToCharArray();
+        for (int i = 0; i < a.Length; i++)
+        {
+            if (!char.IsLetterOrDigit(a[i]))
+                a[i] = '_';
+        }
+        return new string(a);
     }
 }

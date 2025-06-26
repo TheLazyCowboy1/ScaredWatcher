@@ -7,6 +7,7 @@ using UnityEngine;
 using RWCustom;
 using BepInEx;
 using Watcher;
+using BepInEx.Logging;
 
 #pragma warning disable CS0618
 
@@ -20,15 +21,17 @@ public partial class Plugin : BaseUnityPlugin
 {
     public const string MOD_ID = "LazyCowboy.ScaredWatcher",
         MOD_NAME = "Traumatized Watcher Behavior",
-        MOD_VERSION = "0.0.9";
+        MOD_VERSION = "1.0.0";
 
 
+    public static ManualLogSource PublicLogger;
     private static ConfigOptions Options;
 
     public Plugin()
     {
         try
         {
+            PublicLogger = this.Logger;
             Options = new ConfigOptions();
         }
         catch (Exception ex)
